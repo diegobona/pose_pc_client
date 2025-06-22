@@ -102,11 +102,15 @@ class HumanModelManager {
         head.receiveShadow = true;
         
         this.bodyParts.head = head;
-        this.humanModel.add(head);
         
         // 创建头部关节
-        this.createJoint('Head', 0, 3.2, 0);         // 头部
-        this.createJoint('HeadTop_End', 0, 4, 0);    // 头顶端点
+        this.createJoint('Head', 0, 3.2, 0, 'Neck');         // 头部
+        this.createJoint('HeadTop_End', 0, 4, 0, 'Head');    // 头顶端点
+        
+        // 将头部添加到Head关节上
+        const headJoint = this.joints['Head'];
+        head.position.set(0, 0.3, 0); // 相对于关节的位置
+        headJoint.add(head);
     }
 
     /**
@@ -131,15 +135,25 @@ class HumanModelManager {
         
         this.bodyParts.chest = chest;
         this.bodyParts.waist = waist;
-        this.humanModel.add(chest);
-        this.humanModel.add(waist);
         
         // 创建脊椎关节 - 按标准骨骼层级
         this.createJoint('Hips', 0, 0, 0);           // 根关节
-        this.createJoint('Spine', 0, 0.5, 0);        // 脊椎1
-        this.createJoint('Spine1', 0, 1.2, 0);       // 脊椎2
-        this.createJoint('Spine2', 0, 2, 0);         // 脊椎3
-        this.createJoint('Neck', 0, 2.8, 0);         // 颈部
+        this.createJoint('Spine', 0, 0.5, 0, 'Hips');        // 脊椎1
+        this.createJoint('Spine1', 0, 1.2, 0, 'Spine');       // 脊椎2
+        this.createJoint('Spine2', 0, 2, 0, 'Spine1');         // 脊椎3
+        this.createJoint('Neck', 0, 2.8, 0, 'Spine2');         // 颈部
+        
+        // 将身体部位添加到对应的关节上
+        const spineJoint = this.joints['Spine'];
+        const spine2Joint = this.joints['Spine2'];
+        
+        // 腰部添加到脊椎关节
+        waist.position.set(0, 0, 0); // 相对于关节的位置
+        spineJoint.add(waist);
+        
+        // 胸部添加到脊椎2关节
+        chest.position.set(0, 0, 0); // 相对于关节的位置
+        spine2Joint.add(chest);
     }
 
     /**
@@ -186,20 +200,33 @@ class HumanModelManager {
         this.bodyParts[`${side}_forearm`] = forearm;
         this.bodyParts[`${side}_hand`] = hand;
         
-        this.humanModel.add(upperArm);
-        this.humanModel.add(forearm);
-        this.humanModel.add(hand);
-        
         // 创建手臂关节 - 按标准骨骼层级
         const shoulderName = side === 'left' ? 'LeftShoulder' : 'RightShoulder';
         const armName = side === 'left' ? 'LeftArm' : 'RightArm';
         const foreArmName = side === 'left' ? 'LeftForeArm' : 'RightForeArm';
         const handName = side === 'left' ? 'LeftHand' : 'RightHand';
         
-        this.createJoint(shoulderName, direction * 1.0, 2.4, 0);     // 肩膀
-        this.createJoint(armName, direction * 1.2, 2.1, 0);          // 上臂
-        this.createJoint(foreArmName, direction * 1.2, 1.05, 0);     // 前臂
-        this.createJoint(handName, direction * 1.2, -0.25, 0);       // 手部
+        this.createJoint(shoulderName, direction * 1.0, 2.4, 0, 'Spine2');     // 肩膀
+        this.createJoint(armName, direction * 1.2, 2.1, 0, shoulderName);          // 上臂
+        this.createJoint(foreArmName, direction * 1.2, 1.05, 0, armName);     // 前臂
+        this.createJoint(handName, direction * 1.2, -0.25, 0, foreArmName);       // 手部
+        
+        // 将身体部位添加到对应的关节上，并调整相对位置
+        const armJoint = this.joints[armName];
+        const foreArmJoint = this.joints[foreArmName];
+        const handJoint = this.joints[handName];
+        
+        // 上臂添加到上臂关节 (上臂关节在肩膀下方0.3，上臂长度1，所以中心在关节下方0.5)
+        upperArm.position.set(0, -0.5, 0);
+        armJoint.add(upperArm);
+        
+        // 前臂添加到前臂关节 (前臂长度1，所以中心在关节下方0.5)
+        forearm.position.set(0, -0.5, 0);
+        foreArmJoint.add(forearm);
+        
+        // 手部添加到手部关节 (手部是球体，半径0.15，所以中心在关节位置)
+        hand.position.set(0, 0, 0);
+        handJoint.add(hand);
         
         // 创建手指关节
         const thumbName = side === 'left' ? 'LeftHandThumb1' : 'RightHandThumb1';
@@ -208,11 +235,11 @@ class HumanModelManager {
         const ringName = side === 'left' ? 'LeftHandRing1' : 'RightHandRing1';
         const pinkyName = side === 'left' ? 'LeftHandPinky1' : 'RightHandPinky1';
         
-        this.createJoint(thumbName, direction * 1.35, -0.35, 0.1);   // 拇指
-        this.createJoint(indexName, direction * 1.35, -0.45, 0.05);  // 食指
-        this.createJoint(middleName, direction * 1.35, -0.45, 0);    // 中指
-        this.createJoint(ringName, direction * 1.35, -0.45, -0.05);  // 无名指
-        this.createJoint(pinkyName, direction * 1.35, -0.45, -0.1);  // 小指
+        this.createJoint(thumbName, direction * 1.35, -0.35, 0.1, handName);   // 拇指
+        this.createJoint(indexName, direction * 1.35, -0.45, 0.05, handName);  // 食指
+        this.createJoint(middleName, direction * 1.35, -0.45, 0, handName);    // 中指
+        this.createJoint(ringName, direction * 1.35, -0.45, -0.05, handName);  // 无名指
+        this.createJoint(pinkyName, direction * 1.35, -0.45, -0.1, handName);  // 小指
     }
 
     /**
@@ -259,10 +286,6 @@ class HumanModelManager {
         this.bodyParts[`${side}_calf`] = calf;
         this.bodyParts[`${side}_foot`] = foot;
         
-        this.humanModel.add(thigh);
-        this.humanModel.add(calf);
-        this.humanModel.add(foot);
-        
         // 创建腿部关节 - 按标准骨骼层级
         const upLegName = side === 'left' ? 'LeftUpLeg' : 'RightUpLeg';
         const legName = side === 'left' ? 'LeftLeg' : 'RightLeg';
@@ -270,11 +293,28 @@ class HumanModelManager {
         const toeBaseName = side === 'left' ? 'LeftToeBase' : 'RightToeBase';
         const toeEndName = side === 'left' ? 'LeftToe_End' : 'RightToe_End';
         
-        this.createJoint(upLegName, direction * 0.4, -0.1, 0);       // 大腿
-        this.createJoint(legName, direction * 0.4, -1.9, 0);         // 小腿
-        this.createJoint(footName, direction * 0.4, -3.5, 0);        // 脚踝
-        this.createJoint(toeBaseName, direction * 0.4, -3.8, 0.3);   // 脚趾根部
-        this.createJoint(toeEndName, direction * 0.4, -3.8, 0.5);    // 脚趾端点
+        this.createJoint(upLegName, direction * 0.4, -0.1, 0, 'Hips');       // 大腿
+        this.createJoint(legName, direction * 0.4, -1.9, 0, upLegName);         // 小腿
+        this.createJoint(footName, direction * 0.4, -3.5, 0, legName);        // 脚踝
+        this.createJoint(toeBaseName, direction * 0.4, -3.8, 0.3, footName);   // 脚趾根部
+        this.createJoint(toeEndName, direction * 0.4, -3.8, 0.5, toeBaseName);    // 脚趾端点
+        
+        // 将身体部位添加到对应的关节上，并调整相对位置
+        const upLegJoint = this.joints[upLegName];
+        const legJoint = this.joints[legName];
+        const footJoint = this.joints[footName];
+        
+        // 大腿添加到大腿关节 (大腿长度1.8，所以中心在关节下方0.9)
+        thigh.position.set(0, -0.9, 0);
+        upLegJoint.add(thigh);
+        
+        // 小腿添加到小腿关节 (小腿长度1.6，所以中心在关节下方0.8)
+        calf.position.set(0, -0.8, 0);
+        legJoint.add(calf);
+        
+        // 脚部添加到脚部关节 (脚部高度0.2，所以中心在关节下方0.1，向前偏移0.2)
+        foot.position.set(0, -0.1, 0.2);
+        footJoint.add(foot);
     }
 
     /**
@@ -283,8 +323,9 @@ class HumanModelManager {
      * @param {number} x - X坐标
      * @param {number} y - Y坐标
      * @param {number} z - Z坐标
+     * @param {string} parentName - 父关节名称（可选）
      */
-    createJoint(name, x, y, z) {
+    createJoint(name, x, y, z, parentName = null) {
         const jointGeometry = new THREE.SphereGeometry(0.1, 8, 8);
         const joint = new THREE.Mesh(jointGeometry, this.materials.joint);
         
@@ -304,9 +345,24 @@ class HumanModelManager {
         joint.renderOrder = 999;           // 设置高渲染优先级
         
         this.joints[name] = joint;
-        this.humanModel.add(joint);
         
-        console.log(`Created joint: ${name} at position (${x}, ${y}, ${z})`);
+        // 建立父子关系
+        if (parentName && this.joints[parentName]) {
+            const parentJoint = this.joints[parentName];
+            // 获取父关节的世界位置
+            const parentWorldPos = new THREE.Vector3();
+            parentJoint.getWorldPosition(parentWorldPos);
+            
+            // 计算相对于父关节的位置
+            const relativePos = new THREE.Vector3(x - parentWorldPos.x, y - parentWorldPos.y, z - parentWorldPos.z);
+            joint.position.copy(relativePos);
+            parentJoint.add(joint);
+            console.log(`Created joint: ${name} as child of ${parentName} at relative position (${relativePos.x.toFixed(2)}, ${relativePos.y.toFixed(2)}, ${relativePos.z.toFixed(2)})`);
+        } else {
+            // 根关节或没有父关节的关节直接添加到人体模型
+            this.humanModel.add(joint);
+            console.log(`Created root joint: ${name} at position (${x}, ${y}, ${z})`);
+        }
     }
 
     /**

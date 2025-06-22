@@ -307,22 +307,10 @@ class JointRotationController {
      * @param {THREE.Object3D} parentJoint - 父关节对象
      */
     updateChildJoints(parentJoint) {
-        const jointName = parentJoint.userData.jointName;
-        const childJointNames = this.jointHierarchy[jointName];
-        
-        if (!childJointNames || !this.humanModelManager.joints) {
-            return;
-        }
-        
-        // 更新所有子关节的位置和方向
-        childJointNames.forEach(childJointName => {
-            const childJoint = this.humanModelManager.joints[childJointName];
-            if (childJoint) {
-                // 这里可以添加更复杂的IK（反向运动学）计算
-                // 目前简单地更新子关节的世界变换矩阵
-                childJoint.updateMatrixWorld(true);
-            }
-        });
+        // 由于关节现在已经建立了正确的父子关系，
+        // Three.js会自动处理层级变换，无需手动更新子关节
+        // 只需要更新世界变换矩阵
+        parentJoint.updateMatrixWorld(true);
     }
 
     /**
