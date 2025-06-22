@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anypose - 3D Pose Reference Tool</title>
+    <script>
+        console.log('HTML head script executed');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded');
+        });
+    </script>
+  <link rel="stylesheet" crossorigin href="/assets/app-B678Fdhv.css">
+</head>
+<body>
+    <script>console.log('Body script executed');</script>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <h1>Anypose</h1>
+            <div id="toolbar">
+                <button id="load-model-btn">Load Model</button>
+                <button id="save-pose-btn">Save Pose</button>
+                <button id="load-pose-btn">Load Pose</button>
+                <button id="export-btn">Export</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content">
+            <!-- 3D Canvas Container -->
+            <div id="canvas-container">
+                <canvas id="three-canvas"></canvas>
+            </div>
+            
+            <!-- 关节信息面板 -->
+            <div id="joint-info" class="joint-info-panel" style="display: none;">
+                <h4>关节信息</h4>
+                <p>请点击关节来查看详细信息</p>
+            </div>
+
+            <!-- Control Panel -->
+            <aside id="control-panel">
+                <div class="panel-section">
+                    <h3>Camera Controls</h3>
+                    <button id="reset-camera">Reset View</button>
+                    <div class="slider-group">
+                        <label>Zoom:</label>
+                        <input type="range" id="zoom-slider" min="0.5" max="3" step="0.1" value="1">
+                    </div>
+                    <div class="camera-presets">
+                        <h4>View Presets</h4>
+                        <button class="btn preset-btn" data-preset="front">Front</button>
+                        <button class="btn preset-btn" data-preset="back">Back</button>
+                        <button class="btn preset-btn" data-preset="left">Left</button>
+                        <button class="btn preset-btn" data-preset="right">Right</button>
+                        <button class="btn preset-btn" data-preset="top">Top</button>
+                        <button class="btn preset-btn" data-preset="bottom">Bottom</button>
+                        <button class="btn preset-btn" data-preset="isometric">Isometric</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>Lighting</h3>
+                    <div class="slider-group">
+                        <label>Main Light Intensity:</label>
+                        <input type="range" id="light-intensity" min="0" max="3" step="0.1" value="1.2">
+                    </div>
+                    <div class="slider-group">
+                        <label>Position X:</label>
+                        <input type="range" id="light-x" min="-10" max="10" step="0.5" value="5">
+                    </div>
+                    <div class="slider-group">
+                        <label>Position Y:</label>
+                        <input type="range" id="light-y" min="0" max="20" step="0.5" value="10">
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>Scene</h3>
+                    <label>
+                        <input type="checkbox" id="show-grid" checked> Show Grid
+                    </label>
+                    <label>
+                        <input type="checkbox" id="show-axes" checked> Show Axes
+                    </label>
+                    <div class="slider-group">
+                        <label>Background:</label>
+                        <select id="background-select">
+                            <option value="0x2c3e50">Dark Blue</option>
+                            <option value="0x34495e">Dark Gray</option>
+                            <option value="0x000000">Black</option>
+                            <option value="0xffffff">White</option>
+                            <option value="0x87CEEB">Sky Blue</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>Pose Library</h3>
+                    <div id="pose-library">
+                        <button class="pose-btn" data-pose="t-pose">T-Pose</button>
+                        <button class="pose-btn" data-pose="a-pose">A-Pose</button>
+                        <button class="pose-btn" data-pose="sitting">Sitting</button>
+                        <button class="pose-btn" data-pose="walking">Walking</button>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Status Bar -->
+        <footer id="status-bar">
+            <span id="status-text">Ready</span>
+            <span id="fps-counter">FPS: 60</span>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/src/js/vendor/jquery.min.js"></script>
+    
+    <!-- Three.js with fallback -->
+    <script>
+        // Three.js CDN with fallback
+        function loadThreeJS() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+                script.onload = () => {
+                    console.log('Three.js loaded from CDN:', typeof THREE);
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.warn('CDN failed, trying backup CDN...');
+                    // Try backup CDN
+                    const backupScript = document.createElement('script');
+                    backupScript.src = 'https://unpkg.com/three@0.128.0/build/three.min.js';
+                    backupScript.onload = () => {
+                        console.log('Three.js loaded from backup CDN:', typeof THREE);
+                        resolve();
+                    };
+                    backupScript.onerror = () => {
+                        console.error('All CDN sources failed!');
+                        reject(new Error('Failed to load Three.js'));
+                    };
+                    document.head.appendChild(backupScript);
+                };
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Load TransformControls after Three.js
+        function loadTransformControls() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js';
+                script.onload = () => {
+                    console.log('TransformControls loaded:', typeof THREE.TransformControls);
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.warn('Primary TransformControls CDN failed, trying backup...');
+                    // Try backup CDN
+                    const backupScript = document.createElement('script');
+                    backupScript.src = 'https://unpkg.com/three@0.128.0/examples/js/controls/TransformControls.js';
+                    backupScript.onload = () => {
+                        console.log('TransformControls loaded from backup:', typeof THREE.TransformControls);
+                        resolve();
+                    };
+                    backupScript.onerror = () => {
+                        console.error('All TransformControls CDN sources failed!');
+                        reject(new Error('Failed to load TransformControls'));
+                    };
+                    document.head.appendChild(backupScript);
+                };
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Load Three.js before other scripts
+        loadThreeJS().then(() => {
+            return loadTransformControls();
+        }).then(() => {
+            // Load core modules after Three.js and TransformControls are ready
+            const scripts = [
+                '/src/js/core/scene.js',
+                '/src/js/core/camera.js',
+                '/src/js/core/human.js',
+                '/src/js/core/jointRotation.js',
+                '/src/js/core/interaction.js',
+                '/src/js/main.js'
+            ];
+            
+            function loadScript(src) {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
+            
+            // Load scripts sequentially
+            scripts.reduce((promise, src) => {
+                return promise.then(() => loadScript(src));
+            }, Promise.resolve()).then(() => {
+                console.log('All scripts loaded successfully');
+            }).catch(error => {
+                console.error('Failed to load scripts:', error);
+            });
+        }).catch(error => {
+            console.error('Failed to load Three.js:', error);
+            // Show error message to user
+            document.body.innerHTML = '<div style="text-align: center; margin-top: 50px; color: red;"><h2>Error: Failed to load 3D engine</h2><p>Please check your internet connection and try again.</p></div>';
+        });
+    </script>
+    
+    <!-- Scripts are now loaded dynamically above -->
+    
+    <!-- Debug script -->
+    <script>
+        // Prevent page reload loops
+        let reloadCount = parseInt(sessionStorage.getItem('reloadCount') || '0');
+        if (reloadCount > 3) {
+            document.body.innerHTML = '<h1 style="color: red; text-align: center; margin-top: 50px;">页面重载次数过多，可能存在循环加载问题</h1>';
+            sessionStorage.removeItem('reloadCount');
+        } else {
+            sessionStorage.setItem('reloadCount', (reloadCount + 1).toString());
+        }
+        
+        window.addEventListener('load', function() {
+            console.log('=== 页面加载调试信息 ===');
+            console.log('Page fully loaded');
+            console.log('THREE available:', typeof THREE !== 'undefined');
+            console.log('SceneManager available:', typeof SceneManager !== 'undefined');
+            console.log('CameraManager available:', typeof CameraManager !== 'undefined');
+            console.log('jQuery available:', typeof $ !== 'undefined');
+            
+            // Check if canvas exists
+            const canvas = document.getElementById('three-canvas');
+            console.log('Canvas element found:', !!canvas);
+            
+            // Add visual indicator
+            const indicator = document.createElement('div');
+            indicator.style.cssText = 'position: fixed; top: 10px; right: 10px; background: green; color: white; padding: 10px; border-radius: 5px; z-index: 9999;';
+            indicator.textContent = '调试模式：页面已加载';
+            document.body.appendChild(indicator);
+            
+            // Check for any JavaScript errors
+            if (typeof THREE === 'undefined') {
+                console.error('THREE.js failed to load!');
+                indicator.style.background = 'red';
+                indicator.textContent = 'Error: THREE.js failed to load';
+                return;
+            }
+            
+            if (typeof SceneManager === 'undefined') {
+                console.error('SceneManager failed to load!');
+                indicator.style.background = 'red';
+                indicator.textContent = 'Error: SceneManager failed to load';
+                return;
+            }
+            
+            if (typeof $ === 'undefined') {
+                console.error('jQuery failed to load!');
+                indicator.style.background = 'red';
+                indicator.textContent = 'Error: jQuery failed to load';
+                return;
+            }
+            
+            indicator.textContent = '所有依赖加载成功！';
+            console.log('All dependencies loaded successfully!');
+            
+            // Clear reload counter on successful load
+            setTimeout(() => {
+                sessionStorage.removeItem('reloadCount');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "name": "anypose-app",
+  "version": "0.1.0",
+  "description": "3D Pose Reference Tool - Desktop Application",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build && copy-js.bat",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "npm run tauri dev",
+    "tauri:build": "npm run tauri build"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "jquery": "^3.7.1",
+    "three": "^0.177.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "vite": "^6.0.3"
+  },
+  "keywords": [
+    "3d",
+    "pose",
+    "reference",
+    "three.js",
+    "tauri",
+    "desktop",
+    "art",
+    "drawing"
+  ],
+  "author": "Anypose Team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/anypose-app.git"
+  }
+}

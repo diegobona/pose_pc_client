@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anypose - 3D Pose Reference Tool</title>
+  <link rel="stylesheet" crossorigin href="/assets/main-D-sf5U2n.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <h1>Anypose</h1>
+            <div id="toolbar">
+                <button id="load-model-btn">Load Model</button>
+                <button id="save-pose-btn">Save Pose</button>
+                <button id="load-pose-btn">Load Pose</button>
+                <button id="export-btn">Export</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content">
+            <!-- 3D Canvas Container -->
+            <div id="canvas-container">
+                <canvas id="three-canvas"></canvas>
+            </div>
+
+            <!-- Control Panel -->
+            <aside id="control-panel">
+                <div class="panel-section">
+                    <h3>Camera Controls</h3>
+                    <button id="reset-camera">Reset View</button>
+                    <div class="slider-group">
+                        <label>Zoom:</label>
+                        <input type="range" id="zoom-slider" min="0.5" max="3" step="0.1" value="1">
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>Lighting</h3>
+                    <div class="slider-group">
+                        <label>Intensity:</label>
+                        <input type="range" id="light-intensity" min="0" max="2" step="0.1" value="1">
+                    </div>
+                    <div class="slider-group">
+                        <label>Position X:</label>
+                        <input type="range" id="light-x" min="-10" max="10" step="0.5" value="5">
+                    </div>
+                    <div class="slider-group">
+                        <label>Position Y:</label>
+                        <input type="range" id="light-y" min="-10" max="10" step="0.5" value="5">
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>Pose Library</h3>
+                    <div id="pose-library">
+                        <button class="pose-btn" data-pose="t-pose">T-Pose</button>
+                        <button class="pose-btn" data-pose="a-pose">A-Pose</button>
+                        <button class="pose-btn" data-pose="sitting">Sitting</button>
+                        <button class="pose-btn" data-pose="walking">Walking</button>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Status Bar -->
+        <footer id="status-bar">
+            <span id="status-text">Ready</span>
+            <span id="fps-counter">FPS: 60</span>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="./js/vendor/jquery.min.js"></script>
+    <script src="./js/vendor/three.min.js"></script>
+    <script src="./js/core/scene.js"></script>
+    <script src="./js/core/camera.js"></script>
+    <script src="./js/core/lighting.js"></script>
+    <script src="./js/core/model.js"></script>
+    <script src="./js/ui/controls.js"></script>
+    <script src="./js/ui/toolbar.js"></script>
+    <script src="./js/main.js"></script>
+</body>
+</html>
