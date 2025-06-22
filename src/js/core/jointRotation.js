@@ -66,7 +66,7 @@ class JointRotationController {
                 z: { min: -Math.PI/3, max: Math.PI/3 }
             },
             'LeftForeArm': {
-                x: { min: 0, max: Math.PI*0.8 },
+                x: { min: -Math.PI*0.8, max: 0 },
                 y: { min: -Math.PI/12, max: Math.PI/12 },
                 z: { min: -Math.PI/12, max: Math.PI/12 }
             },
@@ -87,7 +87,7 @@ class JointRotationController {
                 z: { min: -Math.PI/3, max: Math.PI/3 }
             },
             'RightForeArm': {
-                x: { min: 0, max: Math.PI*0.8 },
+                x: { min: -Math.PI*0.8, max: 0 },
                 y: { min: -Math.PI/12, max: Math.PI/12 },
                 z: { min: -Math.PI/12, max: Math.PI/12 }
             },
@@ -103,7 +103,7 @@ class JointRotationController {
                 z: { min: -Math.PI/6, max: Math.PI/6 }
             },
             'LeftLeg': {
-                x: { min: -Math.PI*0.8, max: 0 },
+                x: { min: 0, max: Math.PI*0.8 },
                 y: { min: -Math.PI/24, max: Math.PI/24 },
                 z: { min: -Math.PI/24, max: Math.PI/24 }
             },
@@ -119,7 +119,7 @@ class JointRotationController {
                 z: { min: -Math.PI/6, max: Math.PI/6 }
             },
             'RightLeg': {
-                x: { min: -Math.PI*0.8, max: 0 },
+                x: { min: 0, max: Math.PI*0.8 },
                 y: { min: -Math.PI/24, max: Math.PI/24 },
                 z: { min: -Math.PI/24, max: Math.PI/24 }
             },

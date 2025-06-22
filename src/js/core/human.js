@@ -74,9 +74,9 @@ class HumanModelManager {
         this.humanModel = new THREE.Group();
         this.humanModel.name = 'HumanModel';
         
-        // 创建身体各部分
-        this.createHead();
+        // 创建身体各部分 - 注意顺序：先创建躯干（包含Neck关节），再创建头部
         this.createTorso();
+        this.createHead();
         this.createArms();
         this.createLegs();
         
