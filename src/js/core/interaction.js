@@ -4,11 +4,10 @@
  */
 
 class InteractionController {
-    constructor(camera, renderer, humanModelManager, scene) {
+    constructor(camera, renderer, humanModelManager) {
         this.camera = camera;
         this.renderer = renderer;
         this.humanModelManager = humanModelManager;
-        this.scene = scene;
         this.container = renderer.domElement.parentElement;
         
         // 射线投射器用于检测鼠标点击
@@ -24,9 +23,6 @@ class InteractionController {
         // 关节旋转控制器
         this.jointRotationController = null;
         
-        // 初始化关节旋转控制器
-        this.initializeJointRotationController();
-        
         // 事件监听器
         this.eventListeners = {
             mousedown: null,
@@ -35,27 +31,13 @@ class InteractionController {
             click: null
         };
         
+        // 初始化关节旋转控制器
+        this.initializeJointRotationController();
+        
         // 初始化事件监听
         this.initializeEventListeners();
         
         console.log('Interaction controller initialized');
-    }
-
-    /**
-     * 初始化关节旋转控制器
-     */
-    initializeJointRotationController() {
-        if (this.scene && this.camera && this.renderer && this.humanModelManager) {
-            this.jointRotationController = new JointRotationController(
-                this.scene,
-                this.camera,
-                this.renderer,
-                this.humanModelManager
-            );
-            console.log('Joint rotation controller integrated');
-        } else {
-            console.warn('Cannot initialize joint rotation controller: missing dependencies');
-        }
     }
 
     /**
@@ -222,19 +204,7 @@ class InteractionController {
         this.selectedJoint = joint;
         
         // 改变关节颜色表示选中状态
-        if (this.humanModelManager.materials && this.humanModelManager.materials.jointSelected) {
-            joint.material = this.humanModelManager.materials.jointSelected;
-        } else {
-            // 如果没有专门的选中材质，创建一个高亮材质
-            const selectedMaterial = this.humanModelManager.materials.joint.clone();
-            selectedMaterial.color.setHex(0xff6600); // 橙色高亮
-            joint.material = selectedMaterial;
-        }
-        
-        // 激活关节旋转控制
-        if (this.jointRotationController) {
-            this.jointRotationController.activateJointControl(joint);
-        }
+        joint.material = this.humanModelManager.materials.selected;
         
         // 触发选择事件
         this.onJointSelected(joint.userData.jointName);
@@ -249,11 +219,6 @@ class InteractionController {
         if (this.selectedJoint) {
             // 恢复原始颜色
             this.selectedJoint.material = this.humanModelManager.materials.joint;
-            
-            // 取消关节旋转控制
-            if (this.jointRotationController) {
-                this.jointRotationController.deactivateJointControl();
-            }
             
             // 触发取消选择事件
             this.onJointDeselected(this.selectedJoint.userData.jointName);
@@ -275,16 +240,11 @@ class InteractionController {
             // 设置新的悬停状态
             this.hoveredJoint = joint;
             
-            // 如果不是选中的关节，使用悬停材质
+            // 如果不是选中的关节，稍微改变颜色表示悬停
             if (joint !== this.selectedJoint) {
-                if (this.humanModelManager.materials && this.humanModelManager.materials.jointHover) {
-                    joint.material = this.humanModelManager.materials.jointHover;
-                } else {
-                    // 如果没有专门的悬停材质，创建一个
-                    const hoverMaterial = this.humanModelManager.materials.joint.clone();
-                    hoverMaterial.color.multiplyScalar(1.3); // 稍微变亮
-                    joint.material = hoverMaterial;
-                }
+                const hoverMaterial = this.humanModelManager.materials.joint.clone();
+                hoverMaterial.color.multiplyScalar(1.3); // 稍微变亮
+                joint.material = hoverMaterial;
             }
         }
     }
@@ -301,13 +261,36 @@ class InteractionController {
     }
 
     /**
+     * 初始化关节旋转控制器
+     */
+    initializeJointRotationController() {
+        if (typeof JointRotationController !== 'undefined') {
+            // 获取场景引用
+            const scene = this.humanModelManager.scene || window.AnyposeApp.scene;
+            this.jointRotationController = new JointRotationController(
+                scene,
+                this.camera,
+                this.renderer,
+                this.humanModelManager
+            );
+            console.log('Joint rotation controller initialized');
+        } else {
+            console.warn('JointRotationController not available');
+        }
+    }
+
+    /**
      * 关节选择事件回调
      * @param {string} jointName - 关节名称
      */
     onJointSelected(jointName) {
-        // 关节旋转控制器会处理信息显示，这里不再重复更新
-        // 可以在这里添加其他选择后的操作
-        // 例如：显示关节控制面板、更新属性面板等
+        // 更新UI显示选中的关节信息
+        this.updateJointInfo(jointName);
+        
+        // 激活关节旋转控制
+        if (this.jointRotationController && this.selectedJoint) {
+            this.jointRotationController.activateJointControl(this.selectedJoint);
+        }
     }
 
     /**
@@ -315,8 +298,13 @@ class InteractionController {
      * @param {string} jointName - 关节名称
      */
     onJointDeselected(jointName) {
-        // 关节旋转控制器会处理信息清除，这里不再重复操作
-        // 可以在这里添加其他取消选择后的操作
+        // 清除UI中的关节信息显示
+        this.clearJointInfo();
+        
+        // 停用关节旋转控制
+        if (this.jointRotationController) {
+            this.jointRotationController.deactivateJointControl();
+        }
     }
 
     /**
@@ -394,7 +382,6 @@ class InteractionController {
         this.camera = null;
         this.renderer = null;
         this.humanModelManager = null;
-        this.scene = null;
         this.container = null;
         
         console.log('Interaction controller disposed');

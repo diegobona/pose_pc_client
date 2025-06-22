@@ -40,35 +40,28 @@ class HumanModelManager {
      * 初始化材质
      */
     initializeMaterials() {
-        // 身体部位材质
+        // 身体材质 - 肤色
         this.materials.body = new THREE.MeshLambertMaterial({
-            color: 0xfdbcb4,
-            transparent: true,
-            opacity: 0.8
-        });
-        
-        // 关节材质
-        this.materials.joint = new THREE.MeshBasicMaterial({
-            color: 0xff0000,
-            transparent: true,
-            opacity: 0.8
-        });
-        
-        // 选中关节材质
-        this.materials.jointSelected = new THREE.MeshBasicMaterial({
-            color: 0xff6600,
-            transparent: true,
-            opacity: 1.0
-        });
-        
-        // 悬停关节材质
-        this.materials.jointHover = new THREE.MeshBasicMaterial({
-            color: 0xff8888,
+            color: 0xffdbac,
             transparent: true,
             opacity: 0.9
         });
         
-        console.log('Materials initialized');
+        // 关节材质 - 红色球体
+        this.materials.joint = new THREE.MeshBasicMaterial({
+            color: 0xff4444,
+            transparent: true,
+            opacity: 0.9,
+            depthTest: false  // 禁用深度测试，确保始终可见
+        });
+        
+        // 选中状态材质 - 亮黄色
+        this.materials.selected = new THREE.MeshBasicMaterial({
+            color: 0xffff00,
+            transparent: true,
+            opacity: 0.95,
+            depthTest: false  // 禁用深度测试，确保始终可见
+        });
     }
 
     /**
@@ -98,71 +91,55 @@ class HumanModelManager {
      * 创建头部
      */
     createHead() {
-        // 创建颈部关节（先创建关节，后面将头部作为子对象添加）
-        this.createJoint('neck', 0, 3, 0);
-        
-        // 获取关节引用
-        const neckJoint = this.joints['neck'];
-        
-        // 头部 - 作为颈部关节的子对象
         const headRadius = 0.5;
         const headGeometry = new THREE.SphereGeometry(headRadius, 16, 16);
         const head = new THREE.Mesh(headGeometry, this.materials.body);
-        // 相对于颈部关节的位置
-        head.position.set(0, 0.5, 0);
+        
+        // 头部位置 (顶部)
+        head.position.set(0, 3.5, 0);
         head.name = 'head';
         head.castShadow = true;
         head.receiveShadow = true;
         
-        // 存储身体部位引用
         this.bodyParts.head = head;
+        this.humanModel.add(head);
         
-        // 建立层次关系：关节作为父对象，头部作为子对象
-        neckJoint.add(head);
-        
-        console.log('Created head with hierarchical joint structure');
+        // 创建头部关节
+        this.createJoint('Head', 0, 3.2, 0);         // 头部
+        this.createJoint('HeadTop_End', 0, 4, 0);    // 头顶端点
     }
 
     /**
      * 创建躯干
      */
     createTorso() {
-        // 创建脊柱关节（先创建关节，后面将身体部位作为子对象添加）
-        this.createJoint('spine_chest', 0, 2.5, 0);
-        this.createJoint('spine_waist', 0, 1, 0);
-        this.createJoint('hip_center', 0, 0, 0);
-        
-        // 获取关节引用
-        const spineChestJoint = this.joints['spine_chest'];
-        const spineWaistJoint = this.joints['spine_waist'];
-        
-        // 胸部 - 作为胸椎关节的子对象
+        // 胸部
         const chestGeometry = new THREE.CylinderGeometry(0.8, 0.9, 1.5, 12);
         const chest = new THREE.Mesh(chestGeometry, this.materials.body);
-        // 相对于胸椎关节的位置
-        chest.position.set(0, -0.75, 0);
+        chest.position.set(0, 2, 0);
         chest.name = 'chest';
         chest.castShadow = true;
         chest.receiveShadow = true;
         
-        // 腰部 - 作为腰椎关节的子对象
+        // 腰部
         const waistGeometry = new THREE.CylinderGeometry(0.7, 0.8, 1, 12);
         const waist = new THREE.Mesh(waistGeometry, this.materials.body);
-        // 相对于腰椎关节的位置
-        waist.position.set(0, -0.5, 0);
+        waist.position.set(0, 0.5, 0);
         waist.name = 'waist';
         waist.castShadow = true;
         waist.receiveShadow = true;
         
-        // 存储身体部位引用
         this.bodyParts.chest = chest;
         this.bodyParts.waist = waist;
+        this.humanModel.add(chest);
+        this.humanModel.add(waist);
         
-        // 建立层次关系：关节作为父对象，身体部位作为子对象
-        spineChestJoint.add(chest);
-        spineWaistJoint.add(waist);
-        
-        console.log('Created torso with hierarchical joint structure');
+        // 创建脊椎关节 - 按标准骨骼层级
+        this.createJoint('Hips', 0, 0, 0);           // 根关节
+        this.createJoint('Spine', 0, 0.5, 0);        // 脊椎1
+        this.createJoint('Spine1', 0, 1.2, 0);       // 脊椎2
+        this.createJoint('Spine2', 0, 2, 0);         // 脊椎3
+        this.createJoint('Neck', 0, 2.8, 0);         // 颈部
     }
 
     /**
@@ -181,56 +158,61 @@ class HumanModelManager {
      * @param {number} direction - -1 (左) 或 1 (右)
      */
     createArm(side, direction) {
-        // 创建肩关节
-        this.createJoint(`${side}_shoulder`, direction * 1.2, 2.4, 0);
-        const shoulderJoint = this.joints[`${side}_shoulder`];
-        
-        // 上臂 - 作为肩膀关节的子对象
+        // 上臂
         const upperArmGeometry = new THREE.CylinderGeometry(0.25, 0.3, 1.2, 8);
         const upperArm = new THREE.Mesh(upperArmGeometry, this.materials.body);
-        // 相对于肩膀关节的位置
-        upperArm.position.set(0, -0.6, 0);
+        upperArm.position.set(direction * 1.2, 1.8, 0);
         upperArm.name = `${side}_upper_arm`;
         upperArm.castShadow = true;
         upperArm.receiveShadow = true;
-        shoulderJoint.add(upperArm);
         
-        // 创建肘关节 - 作为上臂的子对象
-        this.createJoint(`${side}_elbow`, 0, -0.6, 0); // 相对于上臂的位置
-        const elbowJoint = this.joints[`${side}_elbow`];
-        upperArm.add(elbowJoint);
-        
-        // 前臂 - 作为肘部关节的子对象
+        // 前臂
         const forearmGeometry = new THREE.CylinderGeometry(0.2, 0.25, 1, 8);
         const forearm = new THREE.Mesh(forearmGeometry, this.materials.body);
-        // 相对于肘部关节的位置
-        forearm.position.set(0, -0.5, 0);
+        forearm.position.set(direction * 1.2, 0.3, 0);
         forearm.name = `${side}_forearm`;
         forearm.castShadow = true;
         forearm.receiveShadow = true;
-        elbowJoint.add(forearm);
         
-        // 创建腕关节 - 作为前臂的子对象
-        this.createJoint(`${side}_wrist`, 0, -0.5, 0); // 相对于前臂的位置
-        const wristJoint = this.joints[`${side}_wrist`];
-        forearm.add(wristJoint);
-        
-        // 手部 - 作为手腕关节的子对象
+        // 手部
         const handGeometry = new THREE.SphereGeometry(0.15, 8, 8);
         const hand = new THREE.Mesh(handGeometry, this.materials.body);
-        // 相对于手腕关节的位置
-        hand.position.set(0, -0.15, 0);
+        hand.position.set(direction * 1.2, -0.4, 0);
         hand.name = `${side}_hand`;
         hand.castShadow = true;
         hand.receiveShadow = true;
-        wristJoint.add(hand);
         
-        // 存储身体部位引用
         this.bodyParts[`${side}_upper_arm`] = upperArm;
         this.bodyParts[`${side}_forearm`] = forearm;
         this.bodyParts[`${side}_hand`] = hand;
         
-        console.log(`Created ${side} arm with hierarchical bone chain structure`);
+        this.humanModel.add(upperArm);
+        this.humanModel.add(forearm);
+        this.humanModel.add(hand);
+        
+        // 创建手臂关节 - 按标准骨骼层级
+        const shoulderName = side === 'left' ? 'LeftShoulder' : 'RightShoulder';
+        const armName = side === 'left' ? 'LeftArm' : 'RightArm';
+        const foreArmName = side === 'left' ? 'LeftForeArm' : 'RightForeArm';
+        const handName = side === 'left' ? 'LeftHand' : 'RightHand';
+        
+        this.createJoint(shoulderName, direction * 1.0, 2.4, 0);     // 肩膀
+        this.createJoint(armName, direction * 1.2, 2.1, 0);          // 上臂
+        this.createJoint(foreArmName, direction * 1.2, 1.05, 0);     // 前臂
+        this.createJoint(handName, direction * 1.2, -0.25, 0);       // 手部
+        
+        // 创建手指关节
+        const thumbName = side === 'left' ? 'LeftHandThumb1' : 'RightHandThumb1';
+        const indexName = side === 'left' ? 'LeftHandIndex1' : 'RightHandIndex1';
+        const middleName = side === 'left' ? 'LeftHandMiddle1' : 'RightHandMiddle1';
+        const ringName = side === 'left' ? 'LeftHandRing1' : 'RightHandRing1';
+        const pinkyName = side === 'left' ? 'LeftHandPinky1' : 'RightHandPinky1';
+        
+        this.createJoint(thumbName, direction * 1.35, -0.35, 0.1);   // 拇指
+        this.createJoint(indexName, direction * 1.35, -0.45, 0.05);  // 食指
+        this.createJoint(middleName, direction * 1.35, -0.45, 0);    // 中指
+        this.createJoint(ringName, direction * 1.35, -0.45, -0.05);  // 无名指
+        this.createJoint(pinkyName, direction * 1.35, -0.45, -0.1);  // 小指
     }
 
     /**
@@ -249,56 +231,50 @@ class HumanModelManager {
      * @param {number} direction - -1 (左) 或 1 (右)
      */
     createLeg(side, direction) {
-        // 创建髋关节
-        this.createJoint(`${side}_hip`, direction * 0.4, -0.1, 0);
-        const hipJoint = this.joints[`${side}_hip`];
-        
-        // 大腿 - 作为髋关节的子对象
+        // 大腿
         const thighGeometry = new THREE.CylinderGeometry(0.3, 0.35, 1.8, 8);
         const thigh = new THREE.Mesh(thighGeometry, this.materials.body);
-        // 相对于髋关节的位置
-        thigh.position.set(0, -0.9, 0);
+        thigh.position.set(direction * 0.4, -1, 0);
         thigh.name = `${side}_thigh`;
         thigh.castShadow = true;
         thigh.receiveShadow = true;
-        hipJoint.add(thigh);
         
-        // 创建膝关节 - 作为大腿的子对象
-        this.createJoint(`${side}_knee`, 0, -0.9, 0); // 相对于大腿的位置
-        const kneeJoint = this.joints[`${side}_knee`];
-        thigh.add(kneeJoint);
-        
-        // 小腿 - 作为膝关节的子对象
+        // 小腿
         const calfGeometry = new THREE.CylinderGeometry(0.2, 0.25, 1.6, 8);
         const calf = new THREE.Mesh(calfGeometry, this.materials.body);
-        // 相对于膝关节的位置
-        calf.position.set(0, -0.8, 0);
+        calf.position.set(direction * 0.4, -2.7, 0);
         calf.name = `${side}_calf`;
         calf.castShadow = true;
         calf.receiveShadow = true;
-        kneeJoint.add(calf);
         
-        // 创建踝关节 - 作为小腿的子对象
-        this.createJoint(`${side}_ankle`, 0, -0.8, 0); // 相对于小腿的位置
-        const ankleJoint = this.joints[`${side}_ankle`];
-        calf.add(ankleJoint);
-        
-        // 脚部 - 作为踝关节的子对象
+        // 脚部
         const footGeometry = new THREE.BoxGeometry(0.3, 0.2, 0.8);
         const foot = new THREE.Mesh(footGeometry, this.materials.body);
-        // 相对于踝关节的位置
-        foot.position.set(0, -0.2, 0.2);
+        foot.position.set(direction * 0.4, -3.7, 0.2);
         foot.name = `${side}_foot`;
         foot.castShadow = true;
         foot.receiveShadow = true;
-        ankleJoint.add(foot);
         
-        // 存储身体部位引用
         this.bodyParts[`${side}_thigh`] = thigh;
         this.bodyParts[`${side}_calf`] = calf;
         this.bodyParts[`${side}_foot`] = foot;
         
-        console.log(`Created ${side} leg with hierarchical bone chain structure`);
+        this.humanModel.add(thigh);
+        this.humanModel.add(calf);
+        this.humanModel.add(foot);
+        
+        // 创建腿部关节 - 按标准骨骼层级
+        const upLegName = side === 'left' ? 'LeftUpLeg' : 'RightUpLeg';
+        const legName = side === 'left' ? 'LeftLeg' : 'RightLeg';
+        const footName = side === 'left' ? 'LeftFoot' : 'RightFoot';
+        const toeBaseName = side === 'left' ? 'LeftToeBase' : 'RightToeBase';
+        const toeEndName = side === 'left' ? 'LeftToe_End' : 'RightToe_End';
+        
+        this.createJoint(upLegName, direction * 0.4, -0.1, 0);       // 大腿
+        this.createJoint(legName, direction * 0.4, -1.9, 0);         // 小腿
+        this.createJoint(footName, direction * 0.4, -3.5, 0);        // 脚踝
+        this.createJoint(toeBaseName, direction * 0.4, -3.8, 0.3);   // 脚趾根部
+        this.createJoint(toeEndName, direction * 0.4, -3.8, 0.5);    // 脚趾端点
     }
 
     /**
@@ -323,6 +299,9 @@ class HumanModelManager {
         // 关节不投射阴影，但可以接收阴影
         joint.castShadow = false;
         joint.receiveShadow = true;
+        
+        // 确保关节始终显示在最上层
+        joint.renderOrder = 999;           // 设置高渲染优先级
         
         this.joints[name] = joint;
         this.humanModel.add(joint);

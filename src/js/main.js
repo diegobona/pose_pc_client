@@ -78,8 +78,7 @@ $(document).ready(function() {
             AnyposeApp.interactionController = new InteractionController(
                 AnyposeApp.camera,
                 AnyposeApp.renderer,
-                AnyposeApp.humanModelManager,
-                AnyposeApp.scene
+                AnyposeApp.humanModelManager
             );
             console.log('Interaction controller initialized');
             
