@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anypose - 3D Pose Reference Tool</title>
-
     <script>
         console.log('HTML head script executed');
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM Content Loaded');
         });
     </script>
-  <link rel="stylesheet" crossorigin href="/assets/app-D-sf5U2n.css">
+  <link rel="stylesheet" crossorigin href="/assets/app-CMk5d66g.css">
 </head>
 <body>
     <script>console.log('Body script executed');</script>
@@ -32,6 +31,12 @@
             <!-- 3D Canvas Container -->
             <div id="canvas-container">
                 <canvas id="three-canvas"></canvas>
+            </div>
+            
+            <!-- 关节信息面板 -->
+            <div id="joint-info" class="joint-info-panel" style="display: none;">
+                <h4>关节信息</h4>
+                <p>请点击关节来查看详细信息</p>
             </div>
 
             <!-- Control Panel -->
@@ -145,10 +150,88 @@
         
         // Load Three.js before other scripts
         loadThreeJS().then(() => {
-            // Load core modules after Three.js is ready
+            // Load TransformControls after Three.js
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/TransformControls.js';
+                script.onload = () => {
+                    console.log('TransformControls loaded:', typeof THREE.TransformControls);
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.warn('TransformControls CDN failed, trying backup...');
+                    const backupScript = document.createElement('script');
+                    backupScript.src = 'https://unpkg.com/three@0.128.0/examples/js/controls/TransformControls.js';
+                    backupScript.onload = () => {
+                        console.log('TransformControls loaded from backup:', typeof THREE.TransformControls);
+                        resolve();
+                    };
+                    backupScript.onerror = () => {
+                        console.error('Failed to load TransformControls');
+                        reject(new Error('Failed to load TransformControls'));
+                    };
+                    document.head.appendChild(backupScript);
+                };
+                document.head.appendChild(script);
+            });
+        }).then(() => {
+            // Load fflate library first (required by FBXLoader)
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.min.js';
+                script.onload = () => {
+                    console.log('fflate loaded:', typeof fflate);
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.warn('fflate CDN failed, trying backup...');
+                    const backupScript = document.createElement('script');
+                    backupScript.src = 'https://unpkg.com/fflate@0.8.2/lib/index.min.js';
+                    backupScript.onload = () => {
+                        console.log('fflate loaded from backup:', typeof fflate);
+                        resolve();
+                    };
+                    backupScript.onerror = () => {
+                        console.error('Failed to load fflate');
+                        reject(new Error('Failed to load fflate'));
+                    };
+                    document.head.appendChild(backupScript);
+                };
+                document.head.appendChild(script);
+            });
+        }).then(() => {
+            // Load FBXLoader after fflate
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/loaders/FBXLoader.js';
+                script.onload = () => {
+                    console.log('FBXLoader loaded:', typeof THREE.FBXLoader);
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.warn('FBXLoader CDN failed, trying backup...');
+                    const backupScript = document.createElement('script');
+                    backupScript.src = 'https://unpkg.com/three@0.128.0/examples/js/loaders/FBXLoader.js';
+                    backupScript.onload = () => {
+                        console.log('FBXLoader loaded from backup:', typeof THREE.FBXLoader);
+                        resolve();
+                    };
+                    backupScript.onerror = () => {
+                        console.error('Failed to load FBXLoader');
+                        reject(new Error('Failed to load FBXLoader'));
+                    };
+                    document.head.appendChild(backupScript);
+                };
+                document.head.appendChild(script);
+            });
+        }).then(() => {
+            // Load core modules after Three.js and TransformControls are ready
             const scripts = [
                 '/src/js/core/scene.js',
                 '/src/js/core/camera.js',
+                '/src/js/core/human.js',
+                '/src/js/core/jointRotation.js',
+                '/src/js/core/interaction.js',
                 '/src/js/main.js'
             ];
             

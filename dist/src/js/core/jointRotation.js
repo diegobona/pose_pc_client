@@ -19,67 +19,154 @@ class JointRotationController {
         // 当前控制的关节
         this.currentJoint = null;
         
-        // 关节旋转约束配置
+        // 关节旋转约束配置 - 按标准骨骼层级
         this.rotationConstraints = {
-            // 头部关节约束
-            'head': {
-                x: { min: -Math.PI/4, max: Math.PI/4 },    // 上下点头 ±45度
-                y: { min: -Math.PI/3, max: Math.PI/3 },    // 左右摇头 ±60度
-                z: { min: -Math.PI/6, max: Math.PI/6 }     // 左右倾斜 ±30度
-            },
-            // 肩膀关节约束
-            'leftShoulder': {
-                x: { min: -Math.PI/2, max: Math.PI },      // 前后摆动
-                y: { min: -Math.PI/6, max: Math.PI/2 },    // 上下摆动
-                z: { min: -Math.PI/4, max: Math.PI/4 }     // 旋转
-            },
-            'rightShoulder': {
-                x: { min: -Math.PI/2, max: Math.PI },
-                y: { min: -Math.PI/2, max: Math.PI/6 },
+            // 根关节
+            'Hips': {
+                x: { min: -Math.PI/4, max: Math.PI/4 },
+                y: { min: -Math.PI/4, max: Math.PI/4 },
                 z: { min: -Math.PI/4, max: Math.PI/4 }
             },
-            // 肘部关节约束
-            'leftElbow': {
-                x: { min: 0, max: Math.PI*0.8 },           // 只能向前弯曲
-                y: { min: -Math.PI/12, max: Math.PI/12 },  // 轻微左右摆动
-                z: { min: -Math.PI/12, max: Math.PI/12 }   // 轻微旋转
+            // 脊椎关节
+            'Spine': {
+                x: { min: -Math.PI/6, max: Math.PI/6 },
+                y: { min: -Math.PI/6, max: Math.PI/6 },
+                z: { min: -Math.PI/6, max: Math.PI/6 }
             },
-            'rightElbow': {
-                x: { min: 0, max: Math.PI*0.8 },
+            'Spine1': {
+                x: { min: -Math.PI/6, max: Math.PI/6 },
+                y: { min: -Math.PI/6, max: Math.PI/6 },
+                z: { min: -Math.PI/6, max: Math.PI/6 }
+            },
+            'Spine2': {
+                x: { min: -Math.PI/6, max: Math.PI/6 },
+                y: { min: -Math.PI/6, max: Math.PI/6 },
+                z: { min: -Math.PI/6, max: Math.PI/6 }
+            },
+            // 颈部和头部
+            'Neck': {
+                x: { min: -Math.PI/4, max: Math.PI/4 },
+                y: { min: -Math.PI/3, max: Math.PI/3 },
+                z: { min: -Math.PI/4, max: Math.PI/4 }
+            },
+            'Head': {
+                x: { min: -Math.PI/6, max: Math.PI/6 },
+                y: { min: -Math.PI/4, max: Math.PI/4 },
+                z: { min: -Math.PI/6, max: Math.PI/6 }
+            },
+            // 左肩膀和手臂
+            'LeftShoulder': {
+                x: { min: -Math.PI/2, max: Math.PI },
+                y: { min: -Math.PI/2, max: Math.PI/2 },
+                z: { min: -Math.PI/3, max: Math.PI/3 }
+            },
+            'LeftArm': {
+                x: { min: -Math.PI/2, max: Math.PI },
+                y: { min: -Math.PI/2, max: Math.PI/2 },
+                z: { min: -Math.PI/3, max: Math.PI/3 }
+            },
+            'LeftForeArm': {
+                x: { min: -Math.PI*0.8, max: 0 },
                 y: { min: -Math.PI/12, max: Math.PI/12 },
                 z: { min: -Math.PI/12, max: Math.PI/12 }
             },
-            // 髋部关节约束
-            'leftHip': {
-                x: { min: -Math.PI/3, max: Math.PI/2 },    // 前后摆动
-                y: { min: -Math.PI/6, max: Math.PI/3 },    // 左右摆动
-                z: { min: -Math.PI/6, max: Math.PI/6 }     // 旋转
+            'LeftHand': {
+                x: { min: -Math.PI/4, max: Math.PI/4 },
+                y: { min: -Math.PI/6, max: Math.PI/6 },
+                z: { min: -Math.PI/6, max: Math.PI/6 }
             },
-            'rightHip': {
+            // 右肩膀和手臂 (与左侧对称)
+            'RightShoulder': {
+                x: { min: -Math.PI/2, max: Math.PI },
+                y: { min: -Math.PI/2, max: Math.PI/2 },
+                z: { min: -Math.PI/3, max: Math.PI/3 }
+            },
+            'RightArm': {
+                x: { min: -Math.PI/2, max: Math.PI },
+                y: { min: -Math.PI/2, max: Math.PI/2 },
+                z: { min: -Math.PI/3, max: Math.PI/3 }
+            },
+            'RightForeArm': {
+                x: { min: -Math.PI*0.8, max: 0 },
+                y: { min: -Math.PI/12, max: Math.PI/12 },
+                z: { min: -Math.PI/12, max: Math.PI/12 }
+            },
+            'RightHand': {
+                x: { min: -Math.PI/4, max: Math.PI/4 },
+                y: { min: -Math.PI/6, max: Math.PI/6 },
+                z: { min: -Math.PI/6, max: Math.PI/6 }
+            },
+            // 左腿部
+            'LeftUpLeg': {
+                x: { min: -Math.PI/3, max: Math.PI/2 },
+                y: { min: -Math.PI/6, max: Math.PI/3 },
+                z: { min: -Math.PI/6, max: Math.PI/6 }
+            },
+            'LeftLeg': {
+                x: { min: 0, max: Math.PI*0.8 },
+                y: { min: -Math.PI/24, max: Math.PI/24 },
+                z: { min: -Math.PI/24, max: Math.PI/24 }
+            },
+            'LeftFoot': {
+                x: { min: -Math.PI/4, max: Math.PI/6 },
+                y: { min: -Math.PI/12, max: Math.PI/12 },
+                z: { min: -Math.PI/12, max: Math.PI/12 }
+            },
+            // 右腿部 (与左侧对称)
+            'RightUpLeg': {
                 x: { min: -Math.PI/3, max: Math.PI/2 },
                 y: { min: -Math.PI/3, max: Math.PI/6 },
                 z: { min: -Math.PI/6, max: Math.PI/6 }
             },
-            // 膝盖关节约束
-            'leftKnee': {
-                x: { min: -Math.PI*0.8, max: 0 },          // 只能向后弯曲
-                y: { min: -Math.PI/24, max: Math.PI/24 },  // 极少左右摆动
-                z: { min: -Math.PI/24, max: Math.PI/24 }   // 极少旋转
-            },
-            'rightKnee': {
-                x: { min: -Math.PI*0.8, max: 0 },
+            'RightLeg': {
+                x: { min: 0, max: Math.PI*0.8 },
                 y: { min: -Math.PI/24, max: Math.PI/24 },
                 z: { min: -Math.PI/24, max: Math.PI/24 }
+            },
+            'RightFoot': {
+                x: { min: -Math.PI/4, max: Math.PI/6 },
+                y: { min: -Math.PI/12, max: Math.PI/12 },
+                z: { min: -Math.PI/12, max: Math.PI/12 }
             }
         };
         
-        // 关节层次结构映射
+        // 关节层次结构映射 - 按标准骨骼层级
         this.jointHierarchy = {
-            'torso': ['head', 'leftShoulder', 'rightShoulder', 'leftHip', 'rightHip'],
-            'leftShoulder': ['leftElbow'],
-            'rightShoulder': ['rightElbow'],
-            'leftHip': ['leftKnee'],
-            'rightHip': ['rightKnee']
+            // 根关节 Hips 是所有关节的起点
+            'Hips': ['Spine', 'LeftUpLeg', 'RightUpLeg'],
+            
+            // 脊椎链
+            'Spine': ['Spine1'],
+            'Spine1': ['Spine2'],
+            'Spine2': ['Neck', 'LeftShoulder', 'RightShoulder'],
+            
+            // 头颈链
+            'Neck': ['Head'],
+            'Head': ['HeadTop_End'],
+            
+            // 左臂链
+            'LeftShoulder': ['LeftArm'],
+            'LeftArm': ['LeftForeArm'],
+            'LeftForeArm': ['LeftHand'],
+            'LeftHand': ['LeftHandThumb1', 'LeftHandIndex1', 'LeftHandMiddle1', 'LeftHandRing1', 'LeftHandPinky1'],
+            
+            // 右臂链 (与左臂对称)
+            'RightShoulder': ['RightArm'],
+            'RightArm': ['RightForeArm'],
+            'RightForeArm': ['RightHand'],
+            'RightHand': ['RightHandThumb1', 'RightHandIndex1', 'RightHandMiddle1', 'RightHandRing1', 'RightHandPinky1'],
+            
+            // 左腿链
+            'LeftUpLeg': ['LeftLeg'],
+            'LeftLeg': ['LeftFoot'],
+            'LeftFoot': ['LeftToeBase'],
+            'LeftToeBase': ['LeftToe_End'],
+            
+            // 右腿链 (与左腿对称)
+            'RightUpLeg': ['RightLeg'],
+            'RightLeg': ['RightFoot'],
+            'RightFoot': ['RightToeBase'],
+            'RightToeBase': ['RightToe_End']
         };
         
         // 初始化Transform控制器
@@ -220,22 +307,10 @@ class JointRotationController {
      * @param {THREE.Object3D} parentJoint - 父关节对象
      */
     updateChildJoints(parentJoint) {
-        const jointName = parentJoint.userData.jointName;
-        const childJointNames = this.jointHierarchy[jointName];
-        
-        if (!childJointNames || !this.humanModelManager.joints) {
-            return;
-        }
-        
-        // 更新所有子关节的位置和方向
-        childJointNames.forEach(childJointName => {
-            const childJoint = this.humanModelManager.joints[childJointName];
-            if (childJoint) {
-                // 这里可以添加更复杂的IK（反向运动学）计算
-                // 目前简单地更新子关节的世界变换矩阵
-                childJoint.updateMatrixWorld(true);
-            }
-        });
+        // 由于关节现在已经建立了正确的父子关系，
+        // Three.js会自动处理层级变换，无需手动更新子关节
+        // 只需要更新世界变换矩阵
+        parentJoint.updateMatrixWorld(true);
     }
 
     /**
